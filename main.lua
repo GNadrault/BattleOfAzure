@@ -8,36 +8,57 @@ function math.dist(x1,y1, x2,y2) return ((x2-x1)^2+(y2-y1)^2)^0.5 end
 
 math.randomseed(love.timer.getTime())
 
-local myGame = require("game")
+local myMenu = require("screen/menu")
+local myGame = require("screen/game")
+local myFonts = require("utils/fonts")
+
+current_scene = nil
 
 function love.load()
-  mainFont = love.graphics.newFont("resources/fonts/Livingst.ttf", 25)
-  bigFont = love.graphics.newFont("resources/fonts/Livingst.ttf", 35)
-  smallFont = love.graphics.newFont("resources/fonts/Livingst.ttf", 18)
-  love.graphics.setFont(mainFont)
+  love.graphics.setFont(myFonts.mainFont)
   
   local cursor = love.mouse.newCursor("resources/images/divers/cursor.png", 0, 0)
   love.mouse.setCursor(cursor)
   largeur_ecran = love.graphics.getWidth()
   hauteur_ecran = love.graphics.getHeight()
-
-  myGame.Load()
+  switchScene("menu")
 end
 
-
 function love.update(dt)
-  myGame.Update(dt)
+  if current_scene == "menu" then
+    myMenu.Update(dt)
+  elseif current_scene == "game" then
+    myGame.Update(dt)
+  end
 end
 
 function love.draw()
-  myGame.Draw()
+  if current_scene == "menu" then
+    myMenu.Draw()
+  elseif current_scene == "game" then
+    myGame.Draw()
+  end
 end
 
 function love.keypressed(key)
-  myGame.KeyPressed(key)
+  if current_scene == "game" then
+    myGame.KeyPressed(key)
+  end
 end
 
 function love.mousepressed(x, y, button, istouch)
-  myGame.MousePressed(button)
+  if current_scene == "game" then
+    myGame.MousePressed(button)
+  end
+
+end
+
+function switchScene(scene)
+  current_scene = scene
+  if scene == "menu" then
+    myMenu.Load()
+  elseif scene == "game" then
+    myGame.Load()
+  end
 end
   

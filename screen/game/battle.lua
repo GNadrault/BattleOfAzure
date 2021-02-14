@@ -7,8 +7,6 @@ local myGUI = require("utils/GUI")
 
 math.randomseed(love.timer.getTime())
 
-Battle.play = true
-
 -- Background
 local fields = {"PLAIN","FOREST","MOUNTAIN"}
 local fieldHero = nil
@@ -251,6 +249,10 @@ end
 
 -- Dessine le combat
 function Battle.Draw()
+  love.graphics.setColor(0.2,0.2,0.2, 0.5)
+  love.graphics.rectangle("fill", 0, 0, largeur_ecran, hauteur_ecran)
+  love.graphics.setColor(1,1,1,1)
+  
   if t < shakeDuration then
       local dx = love.math.random(-shakeMagnitude, shakeMagnitude)
       local dy = love.math.random(-shakeMagnitude, shakeMagnitude)

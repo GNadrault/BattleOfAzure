@@ -1,30 +1,30 @@
 local Finish = {}
 
 local myGUI = require("utils/GUI")
-local HUD = require("screen/hud")
-
-Finish.restart = false
-Finish.backToMenu = false
+local HUD = require("utils/hud")
 
 local groupFinishHUD
-local textVictory = "VICTORY !"
-local textGameover = "GAMEOVER !"
+local textDisplay = ""
 local textEndHUD = nil
 
 function Finish.onReplayPressedHUD(pState)
   if pState == "end" then
-    Finish.restart = true
+    
   end
 end
 
 function Finish.onBackPressedHUD(pState)
   if pState == "end" then
-    Finish.backToMenu = true
+    switchScene("menu")
   end
 end
 
-function Finish.Load()
-  
+function Finish.Load(victory)
+  if victory then
+    textDisplay = "VICTORY !"
+  else
+    textDisplay = "GAMEOVER !" 
+  end
   -- Panel Victoire defaite + text
   local panelEndHUD = myGUI.newPanel((largeur_ecran - HUD.panelImageHUD:getWidth())/2,  hauteur_ecran/5)
   panelEndHUD:setImage(HUD.panelImageHUD)
@@ -47,19 +47,17 @@ function Finish.Load()
   groupFinishHUD:addElement(textEndHUD)
   groupFinishHUD:addElement(buttonReplayHUD)
   groupFinishHUD:addElement(buttonBackHUD)
-  Finish.play = false
 end
 
 function Finish.Draw()
+  love.graphics.setColor(0.2,0.2,0.2, 0.5)
+  love.graphics.rectangle("fill", 0, 0, largeur_ecran, hauteur_ecran)
+  love.graphics.setColor(1,1,1,1)
   groupFinishHUD:draw()
 end
 
 function Finish.Update(dt, victory)
-  if victory then
-    textEndHUD:setText(textVictory)
-  else
-    textEndHUD:setText(textGameover)
-  end
+  textEndHUD:setText(textVictory)
   groupFinishHUD:update(dt)
 end
 

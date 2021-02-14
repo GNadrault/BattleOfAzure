@@ -1,10 +1,9 @@
-local Map = {}
+local Grid = {}
 
-local Heros = require("entities/heros")
-local Demons = require("entities/demons")
-local Utils = require("utils/utils")
+local Path = require("grid/path")
+local Node = require("grid/node")
 
-Map.Background = 
+Grid.Background = 
             {
               {15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,26,25},
               {15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15},
@@ -32,7 +31,7 @@ Map.Background =
               {15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,26,7,7,25,27,15,26,7,7,25,27,15,15,15,15,18}            
             }
 
-Map.Foreground = 
+Grid.Foreground = 
             {
               {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
               {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -60,40 +59,25 @@ Map.Foreground =
               {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
             }
 
-Map.MAP_WIDTH = 32
-Map.MAP_HEIGHT = 24
-Map.TILE_WIDTH = 16
-Map.TILE_HEIGHT = 16
+Grid.MAP_WIDTH = 32
+Grid.MAP_HEIGHT = 24
+Grid.TILE_WIDTH = 16
+Grid.TILE_HEIGHT = 16
 
-Map.Obstacle = {6,7,8,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,35,36,37,38,39,40,41,42,43,44,45,46,47,48}
+Grid.Obstacle = {6,7,8,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,35,36,37,38,39,40,41,42,43,44,45,46,47,48}
 
-Map.Forest = {82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152}
+Grid.Forest = {82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152}
 
-Map.Mountain = {154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,181,182,183,184,189,190,191,192}
+Grid.Mountain = {154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,181,182,183,184,189,190,191,192}
 
-function Map.Load()
-  
-  -- Chargement des heros
-  Heros.CreeHero("KNIGHT", 13, 13)
-  Heros.CreeHero("KNIGHT", 16, 9)
-  Heros.CreeHero("ARCHER", 8, 13)
-  Heros.CreeHero("ARCHER", 6, 9)
-  Heros.CreeHero("WIZARD", 10, 7)
-  
-  Demons.CreeDemon("DEVIL", 12, 25)
-  Demons.CreeDemon("GOBLIN", 8, 22)
-  Demons.CreeDemon("GOBLIN", 19, 22)
-  Demons.CreeDemon("TROLL", 13, 19)
-  Demons.CreeDemon("TROLL", 18, 25)
-end
 
-function Map.isObstacle(pLine, pCol)
+function Grid.isObstacle(pLine, pCol)
   local obstacleBack = Utils.has_value(Map.Obstacle, Map.Background[pLine][pCol])
   local obstacleFront = Utils.has_value(Map.Obstacle, Map.Foreground[pLine][pCol]) 
   return obstacleFront or (obstacleBack and Map.Foreground[pLine][pCol] == 0)
 end
 
-function Map.GetField(pLine, pCol)
+function Grid.GetField(pLine, pCol)
   if Utils.has_value(Map.Forest, Map.Foreground[pLine][pCol]) then
     return "FOREST"
   elseif Utils.has_value(Map.Mountain, Map.Foreground[pLine][pCol]) then
@@ -104,4 +88,69 @@ function Map.GetField(pLine, pCol)
 end
 
 
-return Map
+-- Créer la grille de déplacement/d'action du personnage
+function Grid.CreateGrid(pLine, pCol, move_distance)
+  local starting_pos = Node:new(nil, pLine, pCol, 0, 0, 0)
+  --local movePath = {}
+  local moveGrid = {}
+  table.insert(moveGrid, starting_pos)
+  local move = 1
+  while move <= move_distance do
+    local new_positions = {}
+    for index, valeur in ipairs(moveGrid) do
+      local up_pos = Node:new(nil, valeur.line-1, valeur.col, move, 0, 0)
+      local right_pos = Node:new(nil, valeur.line, valeur.col+1, move, 0, 0)
+      local down_pos = Node:new(nil, valeur.line+1, valeur.col, move, 0, 0)
+      local left_pos = Node:new(nil, valeur.line, valeur.col-1, move, 0, 0)
+      table.insert(new_positions, up_pos)
+      table.insert(new_positions, right_pos)
+      table.insert(new_positions, down_pos)
+      table.insert(new_positions, left_pos)
+    end
+    for index, valeur in ipairs(new_positions) do
+      if Utils.getPosInTable(valeur.line, valeur.col, moveGrid) == 0 then
+        if valeur.col>0 and valeur.col<= Map.MAP_WIDTH and valeur.line>0 and valeur.line<= Map.MAP_HEIGHT then
+          if not Map.isObstacle(valeur.line+1, valeur.col+1) then
+            if current_state == "move" then
+              if Heros.getHeroAt(valeur.line,valeur.col) == nil and Demons.getDemonAt(valeur.line,valeur.col) == nil then
+                table.insert(moveGrid, valeur)
+              end
+            elseif current_state == "action" then
+              if current_turn == "hero" then
+                if Heros.getHeroAt(valeur.line,valeur.col) == nil then
+                  table.insert(moveGrid, valeur)
+                end
+              elseif current_turn == "demon" then
+                if Demons.getDemonAt(valeur.line,valeur.col) == nil then
+                  table.insert(moveGrid, valeur)
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+    move = move + 1
+  end
+  -- On retire le déplacement de la case du personnage
+  table.remove(moveGrid, 1)
+  return moveGrid
+end
+
+-- Creer le path le plus court du point de départ au point d'arrive
+function Grid.CreatePath(startLine, startCol, endLine, endCol)
+  local finalNode = Path.FindPath(startLine, startCol, endLine, endCol)
+  local movePath = {}
+  if finalNode ~= nil then
+    local currentNode = finalNode
+    while currentNode ~= nil do
+      local pos = Utils.getPosInTable(currentNode.line, currentNode.col, moveGrid)
+      if pos > 0 then
+        table.insert(movePath, currentNode)
+      end
+      currentNode = currentNode.parent
+    end
+  end
+  return movePath
+end
+return Grid
